@@ -25,7 +25,6 @@ def next(s, timer_ref) do
 
 		# count up votes, transition into leader once enough
 		{ :VOTE_REP, _} -> 
-			Monitor.debug(s, "Candidate #{s.id} recieved vote")
 			s = State.votes(s, s.votes + 1)
 			# no need to check for greater than since transition occurs straight after reaching
 			if s.votes == s.majority do
@@ -48,7 +47,6 @@ def next(s, timer_ref) do
 
 		# respond to vote requests
 		{ :VOTE_REQ, server_state } ->
-			Monitor.debug(s, 1, "Candidate #{s.id} received vote request from #{server_state.id}")
 			{ _, s } = Vote.process_vote_request(s, server_state)
 			Candidate.next(s, timer_ref)
 	end

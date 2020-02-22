@@ -30,7 +30,6 @@ def next(s, timer_ref) do
 
 		# reply to vote requests
 		{ :VOTE_REQ, server_state } ->
-			Monitor.debug(s, 1, "Follower #{s.id} received vote request from Candidate #{server_state.id}")
 			{ _, s } = Vote.process_vote_request(s, server_state)
 			Follower.next(s, timer_ref)
 	end

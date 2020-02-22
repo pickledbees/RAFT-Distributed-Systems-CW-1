@@ -23,6 +23,7 @@ def next(s, timer_ref) do
 			{ replied, s } = Append.process_heartbeat_request(s, server_state)
 			if replied do
 				Server.stop_timeout(timer_ref)
+				Monitor.debug(s, "Server #{s.id} steps down")
 				Follower.start(s)
 			else
 				Leader.next(s, timer_ref)
@@ -34,6 +35,7 @@ def next(s, timer_ref) do
 			{ voted, s } = Vote.process_vote_request(s, server_state)
 			if voted do
 				Server.stop_timeout(timer_ref)
+				Monitor.debug(s, "Server #{s.id} steps down")
 				Follower.start(s)
 			else
 				Leader.next(s, timer_ref)

@@ -43,7 +43,7 @@ end
 
 defp more_parameters(config) do
   Map.merge config, %{ 
-    debug_level:     0,         # debug level 0  
+    debug_level:     5,         # debug level 0  
     print_after:     2_000,     # print transaction log summary every print_after millisecs
 
     client_requests: 1,    	# max requests each client will make

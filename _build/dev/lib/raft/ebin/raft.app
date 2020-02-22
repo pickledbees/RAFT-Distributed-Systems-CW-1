@@ -1,8 +1,9 @@
 {application,raft,
              [{applications,[kernel,stdlib,elixir,logger]},
               {description,"raft"},
-              {modules,['Elixir.Client','Elixir.DAC','Elixir.Database',
-                        'Elixir.Monitor','Elixir.Raft','Elixir.Server',
-                        'Elixir.State']},
+              {modules,['Elixir.Append','Elixir.Candidate','Elixir.Client',
+                        'Elixir.DAC','Elixir.Database','Elixir.Follower',
+                        'Elixir.Leader','Elixir.Monitor','Elixir.Raft',
+                        'Elixir.Server','Elixir.State','Elixir.Vote']},
               {registered,[]},
               {vsn,"0.1.0"}]}.

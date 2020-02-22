@@ -12,7 +12,7 @@ def start(config, client_id, servers) do
     leaderP:    Enum.random(servers),  # randomly pick a server
     cmd_seqnum: 0,
   }
-  Monitor.debug(c, "Client #{client_id} at #{DAC.node_ip_addr}")
+  Monitor.debug(c, "CLIENT #{client_id} at #{DAC.node_ip_addr}")
   Process.send_after(self(), { :CLIENT_STOP }, c.config.client_stop)
   Client.next(c)
 end # start
@@ -38,8 +38,10 @@ def next(c) do
     client_request = 
     client_request = { :CLIENT_REQUEST, %{clientP: self(), uid: uid, cmd: cmd } }
 
+    # NOTE: send_request is synchronous operation, moves into send_request 'state'
     {c, _client_result} = Client.send_request(c, client_request)  # result not used
 
+    # on return, reset state
     Client.next(c)
   end # receive
 end # next

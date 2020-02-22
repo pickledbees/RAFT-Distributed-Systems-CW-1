@@ -5,7 +5,16 @@
 defmodule Database do
 
 def start(config, server_id) do
-  db = %{config: config, server_id: server_id, seqnum: 0, balances: Map.new}
+  # db is state of database
+  db = %{
+    config: config,
+    # DB uses server_id to identify itself, should prefix with 'DB' on debug
+    server_id: server_id, 
+    seqnum: 0, 
+    balances: Map.new
+  }
+
+  # pass db state into 'next' function
   Database.next(db)
 end # start
 
@@ -17,10 +26,17 @@ def balances(db, i, v), do:
 def next(db) do
   receive do
   { :EXECUTE, command } ->  # should send a result back, but assuming always okay
+
+    # literally moving amount from account1 to account2
     { :move, amount, account1, account2 } = command
 
+    # get balance from db.balances belonging to account1, return 0 by default
     balance1 = Map.get db.balances, account1, 0
+
+    # get balance from db.balances belonging to account2, return 0 by default
     balance2 = Map.get db.balances, account2, 0
+
+    # perform amount xfer
     db = Database.balances(db, account1, balance1 + amount)
     db = Database.balances(db, account2, balance2 - amount)
 

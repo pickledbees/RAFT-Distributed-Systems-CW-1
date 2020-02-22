@@ -51,6 +51,8 @@ def match_index(s, v),    do: Map.put(s, :match_index, v)     # sets new  match_
 def match_index(s, i, v), do: Map.put(s, :match_index,
                                   Map.put(s.match_index, i, v))
 
+# getters to self define since to allow for flexibility of default values
+
 # add additional setters 
 
 end # State

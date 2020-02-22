@@ -2,28 +2,39 @@
 # distributed algorithms, n.dulay, 4 feb 2020
 # coursework, raft consensus, v1
 
+# define Component to be Server/Client/Database
+
+# KEY THING TO NOTE:
+# - Concept of state:
+#   - used by Monitor to extract relavant info to print
+#   - Monitor will need to know how the state of each Component looks like to extract relevant info
+#   - should always contain 'config' attribute for monitor to refer to current monitorP and other relevant process info
+
 defmodule Monitor do
 
-def notify(s, message) do send s.config.monitorP, message end
+# s refers to 'state'
+# MUST have config property containing the config Map
+# used by other processes to send messages to the current running monitor
+def notify(component, message) do send component.config.monitorP, message end
 
 # default debugs
-def debug(s, string) do 
- if s.config.debug_level == 0 do IO.puts "server #{s.id} #{string}" end
+def debug(component, string) do 
+ if component.config.debug_level == 0 do IO.puts "#{string}" end
 end # debug
 
 # to selectivly choose at what depth of debuggin required
-def debug(s, level, string) do 
- if level >= s.config.debug_level do IO.puts "server #{s.id} #{string}" end
+def debug(component, level, string) do 
+ if level >= component.config.debug_level do IO.puts "#{string}" end
 end # debug
 
 # used by state formatter
 def pad(key), do: String.pad_trailing("#{key}", 10)
 
-# get formatted state of server
-def state(s, level, string) do 
- if level >= s.config.debug_level do 
-   state_out = for {key, value} <- s, into: "" do "\n  #{pad(key)}\t #{inspect value}" end
-   IO.puts "\nserver #{s.id} #{s.role}: #{inspect s.selfP} #{string} state = #{state_out}"
+# print formatted state of server
+def printServerState(serverS, level, string) do 
+ if level >= serverS.config.debug_level do 
+   state_out = for {key, value} <- serverS, into: "" do "\n  #{pad(key)}\t #{inspect value}" end
+   IO.puts "\nserver #{serverS.id} #{serverS.role}: #{inspect serverS.selfP} #{string} state = #{state_out}"
  end # if
 end # state
 
@@ -59,7 +70,7 @@ def clock(state, v), do: Map.put(state, :clock, v)
 
 # i is server_number
 # v is number or requests to that server
-# updater for state
+# updater for monitors' state
 def requests(state, i, v), do: 
     Map.put(state, :requests, Map.put(state.requests, i, v))
 
@@ -70,6 +81,7 @@ def updates(state, i, v), do:
 def moves(state, v), do: Map.put(state, :moves, v)
 
 def next(state) do
+  # messages are sent by calling the Monitor.notify() method
   receive do
   { :DB_MOVE, db, seqnum, command} ->
     { :move, amount, from, to } = command
@@ -100,6 +112,7 @@ def next(state) do
     state = Monitor.requests(state, server_num, state.requests + 1)
     Monitor.next(state)
 
+  # message to send to monitor to do a print of state
   { :PRINT } ->
     clock  = state.clock + state.config.print_after
     state  = Monitor.clock(state, clock)
@@ -118,7 +131,10 @@ def next(state) do
     Process.send_after(self(), { :PRINT }, state.config.print_after)
     Monitor.next(state)
 
-  # ** ADD ADDITIONAL MONITORING MESSAGES HERE
+  # print on leader election
+  { :LEADER_ELECTED, s } ->
+    IO.puts "Event: SERVER #{s.id} IS LEADER"
+    Monitor.next(state)
 
   unexpected ->
     Monitor.halt "monitor: unexpected message #{inspect unexpected}"

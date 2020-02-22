@@ -15,8 +15,21 @@ def start(config, server_id, databaseP) do
 end # start
 
 def next(_s) do
-  # omitted
+	Follower.start(_s)
 end # next
 
-end # Server
+def broadcast(_s, message) do
+	for server <- _s.servers do
+		send server, message
+	end
+end
 
+def start_election_timeout(s) do
+	Process.send_after(s.selfP, { :ELECTION_TIMEOUT }, Enum.random(150 .. 300))
+end
+
+def stop_timeout(timer_ref) do
+	Process.cancel_timer(timer_ref)
+end
+
+end # Server

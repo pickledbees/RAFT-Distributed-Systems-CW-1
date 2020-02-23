@@ -17,7 +17,7 @@ def process_vote_request(own_s, other_s) do
 
 		own_s = State.voted_for(own_s, other_s.id)
 
-		Monitor.debug(own_s, 0, "#{Atom.to_string(own_s.role)} #{own_s.id} voted for Candidate #{other_s.id}")
+		# Monitor.log_action(own_s, other_s, System.monotonic_time(), "voted for")
 
 		send other_s.selfP, { :VOTE_REP, own_s }
 		{ true, own_s }

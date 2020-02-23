@@ -43,8 +43,9 @@ end
 
 defp more_parameters(config) do
   Map.merge config, %{ 
-    debug_level:     2,         # debug level 0  
+    debug_level:     3,         # debug level 0  
     print_after:     2_000,     # print transaction log summary every print_after millisecs
+    print_log_after: 9_000,     # print logs
 
     client_requests: 1,    	# max requests each client will make
     client_sleep:    5,        	# time to sleep before sending next request
@@ -57,6 +58,9 @@ defp more_parameters(config) do
     election_timeout: 300,	# timeout(ms) for election, randomly from this to 2*this value
     # depending on time it takes for response, set the timeout accordingly
     append_entries_timeout: 10, # timeout(ms) for expecting reply to append_entries request
+
+    leader_crashing_enabled: true,
+    leader_crash_after: 8000,
 
     crash_servers: %{		# %{ server_num => crash_after_time, ...}
       1 => 10_000,

@@ -17,6 +17,24 @@ defmodule Monitor do
 # used by other processes to send messages to the current running monitor
 def notify(component, message) do send component.config.monitorP, message end
 
+def log(component, time, log_string) do
+  Monitor.notify(component, { :LOG, { time, log_string } })
+end
+
+def log_action(actor, actee, time, action_string) do
+  log_string = Monitor.action(actor, actee, action_string)
+  Monitor.notify(actor, { :LOG, { time, log_string } })
+end
+
+def action(actor, actee, action_string) do
+  "#{Atom.to_string(actor.role)} #{actor.id} #{action_string} #{Atom.to_string(actee.role)} #{actee.id}"
+end
+
+# debug actions sends
+def debug_action(actor, actee, level, action_string) do
+  if level >= actor.config.debug_level do IO.puts Monitor.action(actor, actee, action_string) end
+end
+
 # default debugs
 def debug(component, string) do 
  if component.config.debug_level == 0 do IO.puts "#{string}" end
@@ -60,9 +78,11 @@ def start(config) do
     requests:           Map.new,
     updates:            Map.new,
     moves:              Map.new,
+    log:                []
     # rest omitted
   }
   Process.send_after(self(), { :PRINT }, state.config.print_after)
+  Process.send_after(self(), { :PRINT_LOG }, state.config.print_log_after)
   Monitor.next(state)
 end # start
 
@@ -112,6 +132,17 @@ def next(state) do
     state = Monitor.requests(state, server_num, state.requests + 1)
     Monitor.next(state)
 
+  { :LOG, { time, log_string } } ->
+      state = Map.put(state, :log, state.log ++ [ { time, log_string } ])
+      Monitor.next(state)
+
+  { :PRINT_LOG } ->
+      log = state.log
+      sorted = Enum.sort(log, fn { t1, _ }, { t2, _ } -> t1 < t2 end)
+      extracted = Enum.map(sorted, fn { _, log_string } -> "#{log_string}" end)
+      IO.puts "LOG OUTPUT: \n#{Enum.join(extracted, "\n")}"
+      Monitor.next(state)
+
   # message to send to monitor to do a print of state
   { :PRINT } ->
     clock  = state.clock + state.config.print_after
@@ -129,6 +160,11 @@ def next(state) do
 
     IO.puts ""
     Process.send_after(self(), { :PRINT }, state.config.print_after)
+    Monitor.next(state)
+
+  { :LEADER_ELECTED, leader } ->
+    # send leader.selfP, { :DIE }
+    Process.send_after(leader.selfP, { :DIE }, 2000)
     Monitor.next(state)
 
   unexpected ->

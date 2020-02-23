@@ -11,7 +11,13 @@ def start_election(s) do
 	# vote for self
 	# start timeout
 	s = State.curr_term(s, s.curr_term + 1)
-	Monitor.debug(s, 2, "Server #{s.id} now Candidate in term #{s.curr_term}")
+	Monitor.debug(s, 2, "Server #{s.id} now CANDIDATE in term #{s.curr_term}")
+	
+	Monitor.log(
+		s,
+		System.monotonic_time(),
+		"Server #{s.id} now CANDIDATE in term #{s.curr_term}")
+	
 	s = State.votes(s, 1)
 	s = State.voted_for(s, s.id)
 	Server.broadcast(s, { :VOTE_REQ, s })
@@ -26,7 +32,9 @@ def next(s, timer_ref) do
 
 		# count up votes, transition into leader once enough
 		{ :VOTE_REP, server_state } -> 
-			Monitor.debug(s, 0, "Candidate #{s.id} received vote from #{Atom.to_string(server_state.role)} #{server_state.id}")
+			
+			#Monitor.log_action(s, server_state, System.monotonic_time(), "receieved vote from")
+			
 			s = State.votes(s, s.votes + 1)
 			# no need to check for greater than since transition occurs straight after reaching
 			if s.votes == s.majority do

@@ -11,6 +11,7 @@ def start_election(s) do
 	# vote for self
 	# start timeout
 	s = State.curr_term(s, s.curr_term + 1)
+	Monitor.debug(s, 2, "Server #{s.id} now Candidate in term #{s.curr_term}")
 	s = State.votes(s, 1)
 	s = State.voted_for(s, s.id)
 	Server.broadcast(s, { :VOTE_REQ, s })
@@ -24,7 +25,8 @@ def next(s, timer_ref) do
 		{ :ELECTION_TIMEOUT } -> Candidate.start_election(s)
 
 		# count up votes, transition into leader once enough
-		{ :VOTE_REP, _} -> 
+		{ :VOTE_REP, server_state } -> 
+			Monitor.debug(s, 0, "Candidate #{s.id} received vote from #{Atom.to_string(server_state.role)} #{server_state.id}")
 			s = State.votes(s, s.votes + 1)
 			# no need to check for greater than since transition occurs straight after reaching
 			if s.votes == s.majority do
@@ -46,9 +48,15 @@ def next(s, timer_ref) do
 			end
 
 		# respond to vote requests
+		# if voted, candidate is outdated since it could not have voted after voting for itself
 		{ :VOTE_REQ, server_state } ->
-			{ _, s } = Vote.process_vote_request(s, server_state)
-			Candidate.next(s, timer_ref)
+			{ voted , s } = Vote.process_vote_request(s, server_state)
+			if voted do
+				Server.stop_timeout(timer_ref)
+				Follower.start(s)
+			else
+				Candidate.next(s, timer_ref)
+			end
 	end
 end
 

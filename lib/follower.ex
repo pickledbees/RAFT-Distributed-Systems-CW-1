@@ -2,6 +2,7 @@ defmodule Follower do
 	
 def start(s) do
 	s = State.role(s, :FOLLOWER)
+	Monitor.debug(s, 2, "Server #{s.id} now Follower")
 	Follower.start_timeout(s)
 end
 
@@ -29,9 +30,15 @@ def next(s, timer_ref) do
 			end
 
 		# reply to vote requests
+		# if voted, reset timer
 		{ :VOTE_REQ, server_state } ->
-			{ _, s } = Vote.process_vote_request(s, server_state)
-			Follower.next(s, timer_ref)
+			{ voted, s } = Vote.process_vote_request(s, server_state)
+			if voted do
+				Server.stop_timeout(timer_ref)
+				Follower.start_timeout(s)
+			else
+				Follower.next(s, timer_ref)
+			end
 	end
 end
 

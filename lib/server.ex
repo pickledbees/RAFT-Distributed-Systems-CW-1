@@ -25,7 +25,8 @@ def broadcast(_s, message) do
 end
 
 def start_election_timeout(s) do
-	Process.send_after(s.selfP, { :ELECTION_TIMEOUT }, Enum.random(150 .. 300))
+	election_timeout = s.config.election_timeout
+	Process.send_after(s.selfP, { :ELECTION_TIMEOUT }, Enum.random(election_timeout .. election_timeout * 2))
 end
 
 def stop_timeout(timer_ref) do

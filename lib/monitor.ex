@@ -131,11 +131,6 @@ def next(state) do
     Process.send_after(self(), { :PRINT }, state.config.print_after)
     Monitor.next(state)
 
-  # print on leader election
-  { :LEADER_ELECTED, s } ->
-    IO.puts "Event: SERVER #{s.id} IS LEADER"
-    Monitor.next(state)
-
   unexpected ->
     Monitor.halt "monitor: unexpected message #{inspect unexpected}"
   end # receive

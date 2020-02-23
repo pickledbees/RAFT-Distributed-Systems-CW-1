@@ -21,7 +21,7 @@ def has_lower_term(own_s, other_s) do
 end
 
 def is_same_term_but_self_not_leader(own_s, other_s) do
-	own_s.curr_term == other_s.curr_term and own_s.role !== :LEADER
+	own_s.curr_term == other_s.curr_term and own_s.role != :LEADER
 end
 
 end

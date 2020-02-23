@@ -17,7 +17,7 @@ def process_vote_request(own_s, other_s) do
 
 		own_s = State.voted_for(own_s, other_s.id)
 
-		# Monitor.log_action(own_s, other_s, System.monotonic_time(), "voted for")
+		Monitor.log_action(own_s, other_s, "voted for")
 
 		send other_s.selfP, { :VOTE_REP, own_s }
 		{ true, own_s }

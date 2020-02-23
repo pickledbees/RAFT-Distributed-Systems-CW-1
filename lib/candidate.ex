@@ -11,12 +11,9 @@ def start_election(s) do
 	# vote for self
 	# start timeout
 	s = State.curr_term(s, s.curr_term + 1)
-	Monitor.debug(s, 2, "Server #{s.id} now CANDIDATE in term #{s.curr_term}")
+	Monitor.debug(s, 2, "Server #{s.id} is CANDIDATE in term #{s.curr_term}")
 	
-	Monitor.log(
-		s,
-		System.monotonic_time(),
-		"Server #{s.id} now CANDIDATE in term #{s.curr_term}")
+	Monitor.log(s, "Server #{s.id} is CANDIDATE")
 	
 	s = State.votes(s, 1)
 	s = State.voted_for(s, s.id)
@@ -33,7 +30,7 @@ def next(s, timer_ref) do
 		# count up votes, transition into leader once enough
 		{ :VOTE_REP, server_state } -> 
 			
-			#Monitor.log_action(s, server_state, System.monotonic_time(), "receieved vote from")
+			#Monitor.log_action(s, server_state, "receieved vote from")
 			
 			s = State.votes(s, s.votes + 1)
 			# no need to check for greater than since transition occurs straight after reaching

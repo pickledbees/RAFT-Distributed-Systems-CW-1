@@ -48,19 +48,20 @@ defp more_parameters(config) do
     print_log_after: 9_000,     # print logs
 
     client_requests: 1,    	# max requests each client will make
-    client_sleep:    5,        	# time to sleep before sending next request
+    client_sleep:    10,        	# time to sleep before sending next request
     client_stop:     60_000,  	# time after which client should stop sending requests
     client_timeout:  500,       # timeout for expecting reply to client request
 
     n_accounts:      100,	# number of active bank accounts
     max_amount:      1_000,	# max amount moved between accounts
 
-    election_timeout: 300,	# timeout(ms) for election, randomly from this to 2*this value
+    election_timeout: 500,	# timeout(ms) for election, randomly from this to 2*this value
     # depending on time it takes for response, set the timeout accordingly
+    
     append_entries_timeout: 10, # timeout(ms) for expecting reply to append_entries request
 
     leader_crashing_enabled: true,
-    leader_crash_after: 8000,
+    leader_crash_after: 6000,
 
     crash_servers: %{		# %{ server_num => crash_after_time, ...}
       1 => 10_000,

@@ -17,11 +17,13 @@ defmodule Monitor do
 # used by other processes to send messages to the current running monitor
 def notify(component, message) do send component.config.monitorP, message end
 
-def log(component, time, log_string) do
+def log(component, log_string) do
+  time = component.curr_term
   Monitor.notify(component, { :LOG, { time, log_string } })
 end
 
-def log_action(actor, actee, time, action_string) do
+def log_action(actor, actee, action_string) do
+  time = actor.curr_term
   log_string = Monitor.action(actor, actee, action_string)
   Monitor.notify(actor, { :LOG, { time, log_string } })
 end
@@ -139,7 +141,7 @@ def next(state) do
   { :PRINT_LOG } ->
       log = state.log
       sorted = Enum.sort(log, fn { t1, _ }, { t2, _ } -> t1 < t2 end)
-      extracted = Enum.map(sorted, fn { _, log_string } -> "#{log_string}" end)
+      extracted = Enum.map(sorted, fn { time, log_string } -> "term #{time}: #{log_string}" end)
       IO.puts "LOG OUTPUT: \n#{Enum.join(extracted, "\n")}"
       Monitor.next(state)
 

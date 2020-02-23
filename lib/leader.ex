@@ -4,7 +4,7 @@ def start(s) do
 	s = State.role(s, :LEADER)
 	Monitor.debug(s, 2, "Server #{s.id} becomes LEADER in term #{s.curr_term}")
 
-	Monitor.log(s, System.monotonic_time(), "Server #{s.id} now LEADER in term #{s.curr_term}")
+	Monitor.log(s, "Server #{s.id} is LEADER")
 
 	# kill self
 	if s.config.leader_crashing_enabled do Process.send_after(s.selfP, { :CRASH }, s.config.leader_crash_after) end
@@ -27,12 +27,24 @@ def next(s, timer_ref) do
 		# heartbeat maintenance
 		{ :HEARTBEAT } ->	Leader.send_heartbeats(s)
 
+		# handle requests
+		# message = %{clientP: self(), uid: uid, cmd: cmd }
+		# cmd  = { :move, amount, account1, account2 }
+		# uid  = { c.id, c.cmd_seqnum }              # unique id for cmd
+		{ :CLIENT_REQUEST, message } ->
+			client = message.clientP
+			{ :move, amount, acc1, acc2 } = message.cmd
+			{ client_id, client_seq_num } = message.uid
+			Monitor.log_action(s, %{role: :CLIENT, id: client_id}, "received request from")
+
+			# 
+
+			Leader.next(s, timer_ref)
+
 		# look out for better leaders (RPC rejetions)
 		{ :APPEND_REP, { :HEARTBEAT_REP, false }, server_state } -> 
 			Server.stop_timeout(timer_ref)
-
-			# Monitor.log(s, System.monotonic_time(), "Server #{s.id} steps down from LEADER because of RPC rejection from server #{server_state.id}")
-			
+			# Monitor.log(s, "Server #{s.id} steps down from LEADER because of RPC rejection from server #{server_state.id}")
 			Follower.start(s)
 
 		# respond to heartbeats
@@ -41,9 +53,7 @@ def next(s, timer_ref) do
 			{ accepted, s } = Append.process_heartbeat_request(s, server_state)
 			if accepted do
 				Server.stop_timeout(timer_ref)
-				
-				# Monitor.log(s, System.monotonic_time(), "Server #{s.id} steps down from LEADER because of submssion")
-				
+				# Monitor.log(s, "Server #{s.id} steps down from LEADER because of submssion")
 				Follower.start(s)
 			else
 				Leader.next(s, timer_ref)
@@ -55,9 +65,7 @@ def next(s, timer_ref) do
 			{ voted, s } = Vote.process_vote_request(s, server_state)
 			if voted do
 				Server.stop_timeout(timer_ref)
-				
-				# Monitor.log(s, System.monotonic_time(), "Server #{s.id} steps down from LEADER because new election started")
-				
+				# Monitor.log(s, "Server #{s.id} steps down from LEADER because new election started")
 				Follower.start(s)
 			else
 				Leader.next(s, timer_ref)
@@ -66,7 +74,7 @@ def next(s, timer_ref) do
 end
 
 def crash(s) do
-	Monitor.log(s, System.monotonic_time(), "LEADER #{s.id} is killed")
+	Monitor.log(s, "LEADER #{s.id} is killed")
 end
 
 end

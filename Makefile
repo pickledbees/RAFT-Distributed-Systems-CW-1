@@ -3,7 +3,7 @@
 # Makefile, raft consensus, v1
 
 SERVERS  = 5
-CLIENTS  = 5
+CLIENTS  = 1
 START    = Raft.start
 MAX_TIME = 10000
 
@@ -22,17 +22,24 @@ MIX 	:= -S mix run -e ${START} ${MAX_TIME} ${NODE_SUFFIX} ${SERVERS} ${CLIENTS}
 
 # --------------------------------------------------------------------
 
+# reason for having to explicitly define process names:
+# simply to echo back the PID of the process once Elixir spawns them (called based on tag in spawn)
 run run_multi: compile
 	@ ${ELIXIR} server1_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@ ${ELIXIR} server2_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@ ${ELIXIR} server3_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@ ${ELIXIR} server4_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@ ${ELIXIR} server5_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} server6_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} server7_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} server8_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} server9_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} server10_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@ ${ELIXIR} client1_${NODE_SUFFIX} ${MIX} multi_node_wait &
-	@ ${ELIXIR} client2_${NODE_SUFFIX} ${MIX} multi_node_wait &
-	@ ${ELIXIR} client3_${NODE_SUFFIX} ${MIX} multi_node_wait &
-	@ ${ELIXIR} client4_${NODE_SUFFIX} ${MIX} multi_node_wait &
-	@ ${ELIXIR} client5_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} client2_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} client3_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} client4_${NODE_SUFFIX} ${MIX} multi_node_wait &
+# 	@ ${ELIXIR} client5_${NODE_SUFFIX} ${MIX} multi_node_wait &
 	@sleep 2
 	@ ${ELIXIR} raft_${NODE_SUFFIX} ${MIX} multi_node_start
 

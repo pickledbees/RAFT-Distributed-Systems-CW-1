@@ -4,7 +4,7 @@ def start(s) do
 	s = State.role(s, :FOLLOWER)
 	Monitor.debug(s, 2, "Server #{s.id} now FOLLOWER")
 
-	Monitor.log(s, System.monotonic_time(), "Server #{s.id} now FOLLOWER")
+	Monitor.log(s, "Server #{s.id} is FOLLOWER")
 	
 	Follower.start_timeout(s)
 end

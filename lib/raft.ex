@@ -16,7 +16,7 @@ def start(:multi_node_wait, _), do: :skip
 
 def start(:multi_node_start, config) do
 
-  IO.puts "NOTE: No clients are being spawned, uncomment to spawn"
+  # IO.puts "NOTE: No clients are being spawned, uncomment to spawn"
 
   # spawn monitor process in top-level raft node
   monitorP = spawn(Monitor, :start, [config])
@@ -41,10 +41,10 @@ def start(:multi_node_start, config) do
   end
 
   # create 1 client at each client node
-  # for id <- 1 .. config.n_clients do
-  #   _clientP = Node.spawn(:'client#{id}_#{config.node_suffix}', 
-  #                   Client, :start, [config, id, servers])
-  # end # for
+  for id <- 1 .. config.n_clients do
+    _clientP = Node.spawn(:'client#{id}_#{config.node_suffix}', 
+                    Client, :start, [config, id, servers])
+  end # for
 
 end
 

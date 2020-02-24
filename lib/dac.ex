@@ -55,13 +55,14 @@ defp more_parameters(config) do
     n_accounts:      100,	# number of active bank accounts
     max_amount:      1_000,	# max amount moved between accounts
 
-    election_timeout: 500,	# timeout(ms) for election, randomly from this to 2*this value
+    election_timeout: 1000,	# timeout(ms) for election, randomly from this to 2*this value
     # depending on time it takes for response, set the timeout accordingly
     
     append_entries_timeout: 10, # timeout(ms) for expecting reply to append_entries request
 
     leader_crashing_enabled: true,
     leader_crash_after: 6000,
+    leader_dummy_heartbeat_enabled: true,
 
     crash_servers: %{		# %{ server_num => crash_after_time, ...}
       1 => 10_000,

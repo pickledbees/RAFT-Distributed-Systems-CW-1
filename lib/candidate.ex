@@ -14,10 +14,13 @@ def start_election(s) do
 	Monitor.debug(s, 2, "Server #{s.id} is CANDIDATE in term #{s.curr_term}")
 	
 	Monitor.log(s, "Server #{s.id} is CANDIDATE")
-	
+
+	# vote for self
 	s = State.votes(s, 1)
 	s = State.voted_for(s, s.id)
+	# send out votes, note: will reject self vote
 	Server.broadcast(s, { :VOTE_REQ, s })
+	# set election timeout
 	timer_ref = Server.start_election_timeout(s)
 	Candidate.next(s, timer_ref)
 end
@@ -47,6 +50,7 @@ def next(s, timer_ref) do
 			{ replied, s } = Append.process_heartbeat_request(s, server_state)
 			if replied do
 				Server.stop_timeout(timer_ref)
+				Monitor.log(s, "CANDIDATE #{s.id} stepped down")
 				Follower.start(s)
 			else
 				Candidate.next(s, timer_ref)

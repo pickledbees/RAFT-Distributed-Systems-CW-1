@@ -25,6 +25,8 @@ def initialise(config, server_id, servers, databaseP) do
     log:          nil,  
 
     # -- raft non-persistent data
+    dummy_heartbeat_ref: nil,    # for dummy heartbeat
+    rpc_timer_refs: Map.new,
     role:	  :FOLLOWER,
     commit_index: 0,
     last_applied: 0,
@@ -39,19 +41,23 @@ end # initialise
 def votes(s, v),          do: Map.put(s, :votes, v)
 
 # setters for raft state
+def dummy_heartbeat_ref(s, ref), do: Map.put(s, :dummy_heartbeat_ref, ref)
+def rpc_timer_ref(s, pid, ref), do: Map.put(s, :rpc_timer_refs, Map.put(s.rpc_timer_refs, pid, ref))
 def role(s, v),           do: Map.put(s, :role, v)
 def curr_term(s, v),      do: Map.put(s, :curr_term, v)
 def voted_for(s, v),      do: Map.put(s, :voted_for, v)
 def commit_index(s, v),   do: Map.put(s, :commit_index, v)
 def last_applied(s, v),   do: Map.put(s, :last_applied, v)
 def next_index(s, v),     do: Map.put(s, :next_index, v)      # sets new next_index map
-def next_index(s, i, v),  do: Map.put(s, :next_index,
-                                  Map.put(s.next_index, i, v))
+def next_index(s, id, v), do: Map.put(s, :next_index,
+                                  Map.put(s.next_index, id, v))
 def match_index(s, v),    do: Map.put(s, :match_index, v)     # sets new  match_index map
-def match_index(s, i, v), do: Map.put(s, :match_index,
-                                  Map.put(s.match_index, i, v))
+def match_index(s, id, v), do: Map.put(s, :match_index,
+                                  Map.put(s.match_index, id, v))
 
 # getters to self define since to allow for flexibility of default values
+def get_rpc_timer_ref(s, pid), do: Map.get(s.rpc_timer_refs, pid, nil)
+def get_next_index(s, id), do: Map.get(s.next_index, id, 0)
 
 # add additional setters 
 

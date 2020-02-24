@@ -58,11 +58,12 @@ defp more_parameters(config) do
     election_timeout: 1000,	# timeout(ms) for election, randomly from this to 2*this value
     # depending on time it takes for response, set the timeout accordingly
     
-    append_entries_timeout: 10, # timeout(ms) for expecting reply to append_entries request
+    dummy_heart_beat_timeout: 10,
+    append_entries_timeout: 10_000, # timeout(ms) for expecting reply to append_entries request
 
-    leader_crashing_enabled: true,
-    leader_crash_after: 6000,
-    leader_dummy_heartbeat_enabled: true,
+    leader_crashing_enabled: false,
+    leader_crash_after: 3000,
+    leader_dummy_heartbeat_enabled: true, #enable to suppress new leaders and stop at leader election
 
     crash_servers: %{		# %{ server_num => crash_after_time, ...}
       1 => 10_000,

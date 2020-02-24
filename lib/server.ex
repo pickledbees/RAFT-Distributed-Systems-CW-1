@@ -41,14 +41,15 @@ def rec_start_rpc_timeouts(s, servers) do
 		s
 	else
 		[ serverP | rest ] = servers
-		s = start_rpc_timeout_for_server(s, serverP)
+		# only set timeouts for other servers
+		s = if serverP != s.selfP do start_rpc_timeout_for_server(s, serverP) else s end
 		rec_start_rpc_timeouts(s, rest)
 	end
 end
 
 # returns s
 def start_rpc_timeout_for_server(s, serverP) do
-	rpc_timeout = s.config.append_entries_timeout
+	rpc_timeout = round(s.config.election_timeout / 10)
 	timer_ref = Process.send_after(s.selfP, { :RPC_TIMEOUT, serverP }, rpc_timeout)
 	State.rpc_timer_ref(s, serverP, timer_ref)
 end
@@ -65,6 +66,7 @@ def rec_stop_rpc_timeouts(s, servers) do
 	else
 		[ serverP | rest ] = servers
 		timer_ref = State.get_rpc_timer_ref(s, serverP)
+		# stop only if available
 		if timer_ref != nil, do: stop_timeout(timer_ref)
 		rec_stop_rpc_timeouts(s, rest)
 	end

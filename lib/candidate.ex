@@ -32,8 +32,7 @@ def next(s, timer_ref) do
 
 		# count up votes, transition into leader once enough
 		{ :VOTE_REP, server_state } -> 
-			
-			#Monitor.log_action(s, server_state, "receieved vote from")
+			# Monitor.log_action(s, server_state, "receieved vote from")
 			
 			s = State.votes(s, s.votes + 1)
 			# no need to check for greater than since transition occurs straight after reaching
@@ -44,24 +43,39 @@ def next(s, timer_ref) do
 				Candidate.next(s, timer_ref)
 			end 
 
-		# respond to heartbeats
-		# turn into Follower on valid heartbeat_req (valid leader found)
-		{ :APPEND_REQ, :HEARTBEAT_REQ, server_state } ->
-			{ replied, s } = Append.process_heartbeat_request(s, server_state)
-			if replied do
+		# respond to vote requests
+		# if voted, candidate is outdated since it could not have voted after voting for itself
+		{ :VOTE_REQ, candidate } ->
+			{ voted , s } = Vote.process_vote_request(s, candidate)
+			if voted do
 				Server.stop_timeout(timer_ref)
-				Monitor.log(s, "CANDIDATE #{s.id} stepped down")
 				Follower.start(s)
 			else
 				Candidate.next(s, timer_ref)
 			end
 
-		# respond to vote requests
-		# if voted, candidate is outdated since it could not have voted after voting for itself
-		{ :VOTE_REQ, server_state } ->
-			{ voted , s } = Vote.process_vote_request(s, server_state)
-			if voted do
+		# look out for leaders
+		{ :APPEND_REQ, leader } ->
+			# if valid leader present, process request and step down
+			if s.curr_term <= leader.curr_term do
+				s = Append.process_append_entries_request(s, leader)
+				Follower.start(s)
+			else
+				# else reject request and continue as candidate
+				send leader.selfP, { :APPEND_REP, s.curr_term, false }
+				Candidate.next(s, timer_ref)
+			end
+
+		# DEV listeners
+		#----------------------------------------------------------------------------
+
+		# respond to dummy heartbeats
+		# turn into Follower on valid heartbeat_req (valid leader found)
+		{ :HEARTBEAT_REQ, server_state } ->
+			{ replied, s } = Append.process_heartbeat_request(s, server_state)
+			if replied do
 				Server.stop_timeout(timer_ref)
+				Monitor.log(s, "CANDIDATE #{s.id} stepped down")
 				Follower.start(s)
 			else
 				Candidate.next(s, timer_ref)

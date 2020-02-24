@@ -19,24 +19,40 @@ def next(s, timer_ref) do
 		# become candidate on time out
 		{ :ELECTION_TIMEOUT } -> Candidate.start(s)
 
-		# respond to heartbeats
-		# reset timeout on valid heartbeat request
-		{ :APPEND_REQ, :HEARTBEAT_REQ, server_state } ->
-			{ replied, s } = Append.process_heartbeat_request(s, server_state)
-			
-			if replied do
-				# if replied, that means there is leader, thus reset timeout
+		# reply to vote requests
+		# if voted, reset timer
+		{ :VOTE_REQ, candidate } ->
+			{ voted, s } = Vote.process_vote_request(s, candidate)
+			if voted do
 				Server.stop_timeout(timer_ref)
 				Follower.start_timeout(s)
 			else
 				Follower.next(s, timer_ref)
 			end
 
-		# reply to vote requests
-		# if voted, reset timer
-		{ :VOTE_REQ, server_state } ->
-			{ voted, s } = Vote.process_vote_request(s, server_state)
-			if voted do
+		# look out for leaders
+		{ :APPEND_REQ, leader } ->
+			# if valid leader present, process request and continue as follower and reset timeout
+			if s.curr_term <= leader.curr_term do
+				s = Append.process_append_entries_request(s, leader)
+				Server.stop_timeout(timer_ref)
+				Follower.start_timeout(s)
+			else
+				# else reject request and continue as follower
+				send leader.selfP, { :APPEND_REP, s.curr_term, false }
+				Follower.start_timeout(s)
+			end
+
+		# DEV listeners
+		#----------------------------------------------------------------------------
+
+		# respond to dummy heartbeats
+		# reset timeout on valid heartbeat request
+		{ :HEARTBEAT_REQ, server_state } ->
+			{ replied, s } = Append.process_heartbeat_request(s, server_state)
+			
+			if replied do
+				# if replied, that means there is leader, thus reset timeout
 				Server.stop_timeout(timer_ref)
 				Follower.start_timeout(s)
 			else

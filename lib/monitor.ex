@@ -51,7 +51,7 @@ end # debug
 def pad(key), do: String.pad_trailing("#{key}", 10)
 
 # print formatted state of server
-def printServerState(serverS, level, string) do 
+def print_server_state(serverS, level, string) do 
  if level >= serverS.config.debug_level do 
    state_out = for {key, value} <- serverS, into: "" do "\n  #{pad(key)}\t #{inspect value}" end
    IO.puts "\nserver #{serverS.id} #{serverS.role}: #{inspect serverS.selfP} #{string} state = #{state_out}"
